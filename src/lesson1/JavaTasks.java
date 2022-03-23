@@ -262,12 +262,13 @@ public class JavaTasks {
     }
 
     // Оценка: n - число температур
-    //         Ресурсоемкость: O(n)
+    //         Ресурсоемкость: O(1)
     //         Быстродействие: O(n)
     static public void fastestSortTemperatures(String inputName, String outputName) throws IOException {
         BufferedReader br =
                 new BufferedReader(new InputStreamReader(new FileInputStream(inputName), StandardCharsets.UTF_8));
-        Map<Integer, Integer> range = new HashMap<>();
+
+        int[] tempArray = new int[7740];
 
         for (String line; (line = br.readLine()) != null; ) {
             String[] split = line.split("\\.");
@@ -280,7 +281,8 @@ public class JavaTasks {
             }
             if (i < -273 || i > 500 || f < 0 || f > 9) throw new IllegalArgumentException(line);
             int temp = i * 10 + f * sign;
-            if (!range.containsKey(temp)) range.put(temp, 1); else range.put(temp, range.get(temp) + 1);
+            int index = temp + 2739;
+            tempArray[index] = tempArray[index] + 1;
         }
 
         br.close();
@@ -288,16 +290,14 @@ public class JavaTasks {
         OutputStreamWriter writer =
                 new OutputStreamWriter(new FileOutputStream(outputName), StandardCharsets.UTF_8);
 
-        for (int i = -2739; i < 5001; i++) {
-            if (range.get(i) != null) {
-                int amount = range.get(i);
+        for (int i = 0; i < 7740; i++) {
+                int amount = tempArray[i];
                 while (amount > 0) {
-                    if (i / 10 == 0 && i < 0) writer.write("-");
-                    writer.write("" + i / 10 + "." + abs(i % 10));
+                    if ((i - 2739) / 10 == 0 && (i - 2739) < 0) writer.write("-");
+                    writer.write("" + (i - 2739) / 10 + "." + abs((i - 2739) % 10));
                     writer.write(System.getProperty("line.separator"));
                     amount--;
                 }
-            }
         }
         writer.close();
     }

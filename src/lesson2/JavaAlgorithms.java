@@ -3,6 +3,10 @@ package lesson2;
 import kotlin.NotImplementedError;
 import kotlin.Pair;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 @SuppressWarnings("unused")
 public class JavaAlgorithms {
     /**
@@ -97,8 +101,53 @@ public class JavaAlgorithms {
      * Если имеется несколько самых длинных общих подстрок одной длины,
      * вернуть ту из них, которая встречается раньше в строке first.
      */
-    static public String longestCommonSubstring(String firs, String second) {
-        throw new NotImplementedError();
+    // Пусть n - длина первой строки, m - длина второй строки.
+    // Наихудшее быстродействие: O((n + m) * log(min(n,m)))
+    //                           (Заполнение set'a + перебор подстрок первой строки) * (бинарный поиск)
+    // Наихудшая ресурсоемкость: При заполнении set'a подстроками длиной m/2 из строки длиной m,
+    //                           тогда число символов которое хранит set = m/2 * (m - m/2 + 1) => O(m^2)
+    //                           Улучшить ресурсоемкость можно, сохраняя не сами подстроки, а их хэши, но такой
+    //                           подход требует защиты от коллизий.
+
+    static public String longestCommonSubstring(String first, String second) {
+        boolean flag = false;
+        int end = Math.min(first.length(), second.length());
+        int start = 1;
+        int result = (end + start) / 2;
+        String maxMatch = "";
+
+        Set<String> set = new HashSet<>();
+
+        boolean condition;
+        while (true) {
+            set.clear();
+            createHashSet(set, second, result);
+            condition = false;
+            for (int j = 0; j <= first.length() - result; j++) {
+                String substring = first.substring(j, j + result);
+                if (set.contains(substring)) {
+                    maxMatch = substring;
+                    condition = true;
+                    break;
+                }
+            }
+
+            if (end == start || flag) break;
+            if (condition) start = result; else end = result;
+
+            if (end - start == 1) {
+                if (condition) result++; else result--;
+                flag = true;
+            }
+            else result = (end + start) / 2;
+        }
+        return maxMatch;
+    }
+
+    static public void createHashSet(Set<String> set, String string, int length) {
+        for (int i = 0; i <= string.length() - length; i++) {
+            set.add(string.substring(i, i + length));
+        }
     }
 
     /**
@@ -111,7 +160,26 @@ public class JavaAlgorithms {
      * Справка: простым считается число, которое делится нацело только на 1 и на себя.
      * Единица простым числом не считается.
      */
+
+    // Быстродействие: O(nlog(log(n))
+    // Ресурсоемкость: O(n)
+
     static public int calcPrimesNumber(int limit) {
-        throw new NotImplementedError();
+        int counter = 0;
+        if (limit <= 1) return 0;
+        boolean[] primes = new boolean[limit - 1];
+        Arrays.fill(primes, true);
+
+        for (int i = 2; i <= limit; i++) {
+            if (primes[i - 2]) {
+                int p = 2;
+                while (i * p <= limit) {
+                    primes[i * p - 2] = false;
+                    p++;
+                }
+                counter++;
+            }
+        }
+        return counter;
     }
 }
