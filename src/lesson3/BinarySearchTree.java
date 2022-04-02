@@ -1,6 +1,7 @@
 package lesson3;
 
 import java.util.*;
+
 import kotlin.NotImplementedError;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -382,8 +383,9 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
         @NotNull
         @Override
         public SortedSet<T> headSet(T toElement) {
-            if (outOfBounds(toElement)) throw new IllegalArgumentException();
-            return super.headSet(toElement);
+            if (toElement.compareTo(upperBound) > 0 || (lowerBound != null && toElement.compareTo(lowerBound) < 0))
+                throw new IllegalArgumentException();
+            return new SubBinarySearchTree<>(lowerBound, toElement, tree);//super.headSet(toElement);
         }
 
         // Быстродействие: O(1)
@@ -392,7 +394,8 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
         @Override
         public SortedSet<T> tailSet(T fromElement) {
             if (outOfBounds(fromElement)) throw new IllegalArgumentException();
-            return super.tailSet(fromElement);
+            return new SubBinarySearchTree<>(fromElement, upperBound, tree);//super.headSet(toElement);
+            //super.tailSet(fromElement);
         }
 
         // Быстродействие: O(1)
@@ -402,7 +405,9 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
         public SortedSet<T> subSet(T fromElement, T toElement) {
             if ((lowerBound != null && fromElement.compareTo(lowerBound) < 0) ||
                     (upperBound != null && toElement.compareTo(upperBound) > 0)) throw new IllegalArgumentException();
-            return super.subSet(fromElement, toElement);
+            return new SubBinarySearchTree<>(fromElement, toElement, tree);//super.headSet(toElement);
+
+            //return super.subSet(fromElement, toElement);
         }
 
         private boolean outOfBounds(T t) {
@@ -467,10 +472,15 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
         // Ресурсоемкость: O(1)
         @Override
         public T first() {
-            if (lowerBound == null) return tree.first();
+            if (lowerBound == null) {
+                T value = tree.first();
+                // Проверка на (upperBound != null) не требуется
+                if (value.compareTo(upperBound) < 0) return value; else throw new NoSuchElementException();
+            }
             Node<T> closest = tree.find(lowerBound);
             T value;
             if (closest == null) throw new NoSuchElementException();
+            System.out.println("we found 1 " + closest.value);
             if (closest.value.compareTo(lowerBound) < 0) {
                 BinarySearchTreeIterator it = new BinarySearchTreeIterator();
                 it.next = closest;
@@ -480,6 +490,7 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
                 return value;
             }
             if (upperBound != null && closest.value.compareTo(upperBound) >= 0) throw new NoSuchElementException();
+            System.out.println(closest.value);
             return closest.value;
         }
 
@@ -489,7 +500,11 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
         // Ресурсоемкость:  O(1)
         @Override
         public T last() {
-            if (upperBound == null) return tree.last();
+            if (upperBound == null) {
+                T value = tree.last();
+                // Проверка на (lowerBound != null) не требуется
+                if (value.compareTo(lowerBound) >= 0) return value; else throw new NoSuchElementException();
+            }
             Node<T> closest = tree.find(upperBound);
             if (closest == null) throw new NoSuchElementException();
             if (closest.value.compareTo(upperBound) < 0) {
@@ -513,6 +528,19 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
             }
             if (outOfBounds(closest.value)) throw new NoSuchElementException();
             return closest.value;
+        }
+        @Override
+        public String toString() {
+            StringBuilder s = new StringBuilder();
+            //System.out.println("root is:" + root.value);
+            SubBinarySearchTreeIterator iterator = new SubBinarySearchTreeIterator();
+            while (iterator.hasNext()) {
+                T v = iterator.next();
+                //System.out.println("appending " + v + " next is " + iterator.hasNext());
+                s.append(v);
+                s.append("; ");
+            }
+            return s.toString();
         }
     }
 
@@ -554,5 +582,19 @@ public class BinarySearchTree<T extends Comparable<T>> extends AbstractSet<T> im
         if (left != null && (left.value.compareTo(node.value) >= 0 || !checkInvariant(left))) return false;
         Node<T> right = node.right;
         return right == null || right.value.compareTo(node.value) > 0 && checkInvariant(right);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        //System.out.println("root is:" + root.value);
+        BinarySearchTreeIterator iterator = new BinarySearchTreeIterator();
+        while (iterator.hasNext()) {
+            T v = iterator.next();
+            //System.out.println("appending " + v + " next is " + iterator.hasNext());
+            s.append(v);
+            s.append("; ");
+        }
+        return s.toString();
     }
 }
