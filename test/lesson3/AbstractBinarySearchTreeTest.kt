@@ -581,7 +581,7 @@ abstract class AbstractBinarySearchTreeTest {
         val headHeadSet = headSet.headSet(6)
         val headHeadHeadSet = headHeadSet.headSet(5)
         initialSet.add(5)
-        assertEquals(5, headSet.last())
+        assertEquals(5, headSet.first())
         assertEquals(5, headHeadSet.last())
         assertFailsWith<NoSuchElementException> { headHeadHeadSet.first() }
     }
