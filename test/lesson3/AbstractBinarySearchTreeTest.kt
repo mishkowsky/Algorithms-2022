@@ -306,7 +306,7 @@ abstract class AbstractBinarySearchTreeTest {
                         "An element of the subset was not removed."
                     )
                 } else {
-                    assertFailsWith<IllegalArgumentException>("An illegal argument was passed to remove() without raising an exception") {
+                    assertFalse("An illegal argument was passed to remove() and returned true") {
                         subSet.remove(element)
                     }
                 }
@@ -329,9 +329,13 @@ abstract class AbstractBinarySearchTreeTest {
         for (iteration in 1..100) {
             val initialSet = create()
             val fromElement = random.nextInt(50)
+            // fromFromElement может быть [0..49+9=58]
             val fromFromElement = fromElement + random.nextInt(10)
             val toElement = random.nextInt(50) + 50
+            // toToElement может быть [50-9=41..99]
             val toToElement = toElement - random.nextInt(10)
+            // То есть может быть toToElement < fromFromElement
+            if (toToElement < fromFromElement) continue
             val subSet = initialSet.subSet(fromElement, toElement)
             val subSubSet = subSet.subSet(fromFromElement, toToElement)
             println("Checking if the subset from $fromElement to $toElement (nested $fromFromElement..$toToElement) is a valid view of the initial set...")
@@ -385,6 +389,15 @@ abstract class AbstractBinarySearchTreeTest {
             )
             println("All clear!")
         }
+        val initialSet = create()
+        assertFailsWith<IllegalArgumentException>(
+            "toElement greater fromElement were passed to subSet without raising an exception"
+        ) {
+            initialSet.subSet(9, 5)
+        }
+        initialSet.add(5)
+        val subSet = initialSet.subSet(5, 5)
+        assertEquals(0, subSet.size)
     }
 
     protected fun doSubSetFirstAndLastTest() {
@@ -410,6 +423,7 @@ abstract class AbstractBinarySearchTreeTest {
             val binarySet = create()
             for (i in 1..20) {
                 val nextInt = random.nextInt(100)
+                println(nextInt)
                 controlSet += nextInt
                 binarySet += nextInt
             }
@@ -449,6 +463,12 @@ abstract class AbstractBinarySearchTreeTest {
             )
             println("First element: $actualFirst. Last element: $actualLast.")
         }
+        val initialSet = create()
+        val subSet = initialSet.subSet(55, 56)
+        assertFailsWith<NoSuchElementException> { subSet.first() }
+        initialSet.add(55)
+        assertEquals(55, subSet.first())
+        assertEquals(55, subSet.last())
     }
 
     protected fun doHeadSetTest() {
@@ -478,7 +498,7 @@ abstract class AbstractBinarySearchTreeTest {
                         "An element of the headset was not removed."
                     )
                 } else {
-                    assertFailsWith<IllegalArgumentException>("An illegal argument was passed to remove() without raising an exception") {
+                    assertFalse("An illegal argument was passed to remove() and returned true") {
                         headSet.remove(element)
                     }
                 }
@@ -555,6 +575,15 @@ abstract class AbstractBinarySearchTreeTest {
             )
             println("All clear!")
         }
+        val initialSet = create()
+        val headSet = initialSet.headSet(9)
+        assertFailsWith<IllegalArgumentException> { headSet.headSet(12) }
+        val headHeadSet = headSet.headSet(6)
+        val headHeadHeadSet = headHeadSet.headSet(5)
+        initialSet.add(5)
+        assertEquals(5, headSet.first())
+        assertEquals(5, headHeadSet.last())
+        assertFailsWith<NoSuchElementException> { headHeadHeadSet.first() }
     }
 
     protected fun doTailSetTest() {
@@ -584,7 +613,7 @@ abstract class AbstractBinarySearchTreeTest {
                         "An element of the tailset was not removed."
                     )
                 } else {
-                    assertFailsWith<IllegalArgumentException>("An illegal argument was passed to remove() without raising an exception") {
+                    assertFalse("An illegal argument was passed to remove() and returned true") {
                         tailSet.remove(element)
                     }
                 }
