@@ -335,8 +335,11 @@ abstract class AbstractBinarySearchTreeTest {
             // toToElement может быть [50-9=41..99]
             val toToElement = toElement - random.nextInt(10)
             // То есть может быть toToElement < fromFromElement
-            if (toToElement < fromFromElement) continue
             val subSet = initialSet.subSet(fromElement, toElement)
+            if (fromFromElement > toToElement) {
+                assertFailsWith<IllegalArgumentException> { subSet.subSet(fromFromElement, toToElement) }
+                continue
+            }
             val subSubSet = subSet.subSet(fromFromElement, toToElement)
             println("Checking if the subset from $fromElement to $toElement (nested $fromFromElement..$toToElement) is a valid view of the initial set...")
             var allElementCounter = 0
