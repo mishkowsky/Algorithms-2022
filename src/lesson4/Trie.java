@@ -1,7 +1,7 @@
 package lesson4;
 
 import java.util.*;
-import kotlin.NotImplementedError;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +11,9 @@ import org.jetbrains.annotations.Nullable;
 public class Trie extends AbstractSet<String> implements Set<String> {
 
     private static class Node {
-        SortedMap<Character, Node> children = new TreeMap<>();
+        Character value;
+        Node parent;
+        NavigableMap<Character, Node> children = new TreeMap<>();
     }
 
     private final Node root = new Node();
@@ -33,6 +35,8 @@ public class Trie extends AbstractSet<String> implements Set<String> {
         return initial + (char) 0;
     }
 
+    // Быстродействие: O(log(m) * n), где m - число элементов children, n - длина входной строки element
+    // Ресурсоемкость: O(1)
     @Nullable
     private Node findNode(String element) {
         Node current = root;
@@ -60,6 +64,8 @@ public class Trie extends AbstractSet<String> implements Set<String> {
             } else {
                 modified = true;
                 Node newChild = new Node();
+                newChild.value = character;
+                newChild.parent = current;
                 current.children.put(character, newChild);
                 current = newChild;
             }
@@ -70,6 +76,8 @@ public class Trie extends AbstractSet<String> implements Set<String> {
         return modified;
     }
 
+    // Быстродействие: O(findNode) = O(log(m) * n)
+    // Ресурсоемкость: O(1)
     @Override
     public boolean remove(Object o) {
         String element = (String) o;
@@ -82,6 +90,17 @@ public class Trie extends AbstractSet<String> implements Set<String> {
         return false;
     }
 
+
+    private String getValueByNode(Node node) {
+        StringBuilder s = new StringBuilder();
+        node = node.parent; // skip (char) 0
+        while (node.parent != null) {
+            s.append(node.value);
+            node = node.parent;
+        }
+        return s.reverse().toString();
+    }
+
     /**
      * Итератор для префиксного дерева
      *
@@ -92,8 +111,89 @@ public class Trie extends AbstractSet<String> implements Set<String> {
     @NotNull
     @Override
     public Iterator<String> iterator() {
-        // TODO
-        throw new NotImplementedError();
+        return new TrieIterator(this);
     }
 
+    public class TrieIterator implements Iterator<String> {
+
+        private final Trie trie;
+        private Node nextNode;
+        private String last;
+
+        // Быстродействие: O(noTerminatorBelow) + O(getNewNext)
+        // Ресурсоемкость: O(1)
+        private TrieIterator(Trie trie) {
+            this.trie = trie;
+            nextNode = root;
+            if (root.children.isEmpty()) {
+                nextNode = null;
+                return;
+            }
+            if (noTerminatorBelow()) getNewNext();
+        }
+
+        // Быстродействие: O(1)
+        // Ресурсоемкость: O(1)
+        @Override
+        public boolean hasNext() {
+            return nextNode != null;
+        }
+
+        @Override
+        public String next() {
+            if (!hasNext()) throw new NoSuchElementException();
+            last = trie.getValueByNode(nextNode);
+            getNewNext();
+            return last;
+        }
+
+        // Быстродействие: Худшее: Зависит от рекурсивных вызовов (когда в конце ветки был удален терминирующий узел
+        //                         методом Trie.remove()).
+        //                         O(Кол-во удаленных элементов * Среднее)
+        //                 Среднее: O(log(n) + m + k) + O(noTerminatorBelow), где m - выход из текущей ветки наверх,
+        //                          k - спуск в следующую, n - количество братьев.
+        // Ресурсоемкость: O(1)
+        public void getNewNext() {
+
+            // если nextNode == root, значит все children у root'a уже были перебраны
+            if (nextNode == root) {
+                nextNode = null;
+                return;
+            }
+            char lastChar = nextNode.value;
+
+            // Если есть братья
+            if (lastChar != nextNode.parent.children.lastKey()) {
+                // Получаем следующий узел
+                nextNode = nextNode.parent.children.ceilingEntry((char) (lastChar + 1)).getValue();
+                if (noTerminatorBelow()) getNewNext();
+            }
+            // Иначе идем вверх
+            else {
+                nextNode = nextNode.parent;
+                getNewNext();
+            }
+        }
+
+        // Спуск вниз по самой левой ветке, возвращаемое значение - нижний узел == терминирующий
+        // Быстродействие: O(n * log(m)) - получение firstEntry() на каждом n-ом уровне,
+        //                 m - число элементов в children на k-ом уровне из n, n - число узлов в левой ветке.
+        // Ресурсоемкость: O(1)
+        private boolean noTerminatorBelow() {
+            while (!nextNode.children.isEmpty()) {
+                nextNode = nextNode.children.firstEntry().getValue();
+                if (nextNode.value == (char) 0) return false;
+            }
+            return true;
+        }
+
+        // Быстродействие: O(remove) = O(log(m) * n)
+        // Ресурсоемкость: O(1)
+        @Override
+        public void remove() {
+            if (last == null) throw new IllegalStateException();
+            trie.remove(last);
+            last = null;
+        }
+    }
 }

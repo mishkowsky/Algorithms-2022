@@ -110,6 +110,22 @@ abstract class AbstractTrieTest {
             }
             println("All clear!")
         }
+
+        val trie = create()
+        var it = trie.iterator()
+        assertFalse(it.hasNext())
+        trie.addAll(setOf("a", "aa", "aaa"))
+        val controlSet = sortedSetOf<String>()
+        controlSet.addAll(setOf("a", "aa", "aaa"))
+        it = trie.iterator()
+        for (element in controlSet) assertEquals(element, it.next())
+        assertFailsWith<NoSuchElementException> { it.next() }
+        trie.remove("aa")
+        controlSet.remove("aa")
+        it = trie.iterator()
+        for (element in controlSet) {
+            assertEquals(element, it.next())
+        }
     }
 
     protected fun doIteratorRemoveTest() {
@@ -171,6 +187,21 @@ abstract class AbstractTrieTest {
             }
             println("All clear!")
         }
+
+        val trie = create()
+        var it = trie.iterator()
+        assertFalse(it.hasNext())
+        trie.addAll(setOf("a", "aa", "aaa"))
+        val controlSet = sortedSetOf<String>()
+        controlSet.addAll(setOf("a", "aa", "aaa"))
+        it = trie.iterator()
+        for (element in controlSet) {
+            assertEquals(element, it.next())
+            it.remove()
+        }
+        controlSet.clear()
+        assertEquals(controlSet, trie)
+        assertFailsWith<NoSuchElementException> { it.next() }
     }
 
 }
