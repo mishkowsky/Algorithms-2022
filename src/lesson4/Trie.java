@@ -150,8 +150,11 @@ public class Trie extends AbstractSet<String> implements Set<String> {
         // Быстродействие: Худшее: Зависит от рекурсивных вызовов (когда в конце ветки был удален терминирующий узел
         //                         методом Trie.remove()).
         //                         O(Кол-во удаленных элементов * Среднее)
-        //                 Среднее: O(log(n) + m + k) + O(noTerminatorBelow), где m - выход из текущей ветки наверх,
-        //                          k - спуск в следующую, n - количество братьев.
+        //                 Среднее: O(log(n) + m * log(h)) + O(noTerminatorBelow), где
+        //                          m - количество узлов на пути выхода из текущей ветки,
+        //                          n - количество братьев,
+        //                          log(h) - поиск последнего ключа на k-ом уровне из m среди h элементов множества
+        //                          братьев nextNode.parent.children.
         // Ресурсоемкость: O(1)
         public void getNewNext() {
 
@@ -160,12 +163,12 @@ public class Trie extends AbstractSet<String> implements Set<String> {
                 nextNode = null;
                 return;
             }
-            char lastChar = nextNode.value;
+            char previousChar = nextNode.value;
 
-            // Если есть братья
-            if (lastChar != nextNode.parent.children.lastKey()) {
+            // Если есть братья, которых еще не перебрали
+            if (previousChar != nextNode.parent.children.lastKey()) { // O(log(h))
                 // Получаем следующий узел
-                nextNode = nextNode.parent.children.ceilingEntry((char) (lastChar + 1)).getValue();
+                nextNode = nextNode.parent.children.ceilingEntry((char) (previousChar + 1)).getValue(); // O(log(n))
                 if (noTerminatorBelow()) getNewNext();
             }
             // Иначе идем вверх
