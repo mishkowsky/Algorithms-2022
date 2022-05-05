@@ -119,6 +119,17 @@ abstract class AbstractOpenAddressingSetTest {
             }
             println("All clear!")
         }
+
+        val openAddressingSet = create<Int>(2)
+        var it = openAddressingSet.iterator()
+        assertFalse(it.hasNext())
+        openAddressingSet.addAll(setOf(1, 2, 3))
+        it = openAddressingSet.iterator()
+        while (it.hasNext()) assertTrue(openAddressingSet.contains(it.next()))
+        assertFailsWith<NoSuchElementException> { it.next() }
+        openAddressingSet.remove(3)
+        it = openAddressingSet.iterator()
+        while (it.hasNext()) assertTrue(openAddressingSet.contains(it.next()))
     }
 
     protected fun doIteratorRemoveTest() {
@@ -176,5 +187,41 @@ abstract class AbstractOpenAddressingSetTest {
             }
             println("All clear!")
         }
+
+        val openAddressingSet = create<Int>(4)
+        var iterator = openAddressingSet.iterator()
+        assertFalse(iterator.hasNext())
+        repeat(16) {
+            assertTrue(openAddressingSet.add(random.nextInt()))
+        }
+        iterator = openAddressingSet.iterator()
+        assertFailsWith<IllegalStateException> { iterator.remove() }
+        while (iterator.hasNext()) {
+            iterator.next()
+            iterator.remove()
+        }
+        repeat(16) {
+            assertTrue(openAddressingSet.add(random.nextInt()))
+        }
+        assertFailsWith<IllegalStateException> { openAddressingSet.add(0) }
+    }
+
+    protected fun doCustomTest() {
+        val random = Random()
+        val openAddressingSet = create<Int>(4)
+        val first = Integer.parseInt("10010110", 2)
+        val second = Integer.parseInt("11110110", 2)
+        val third = Integer.parseInt("1110110", 2)
+        openAddressingSet += first
+        openAddressingSet += second
+        openAddressingSet += third
+        assertTrue(openAddressingSet.remove(second))
+        assertTrue(openAddressingSet.contains(third))
+        assertTrue(openAddressingSet.remove(third))
+
+        repeat(15) {
+            assertTrue(openAddressingSet.add(random.nextInt()))
+        }
+        assertFailsWith<IllegalStateException> { openAddressingSet.add(0) }
     }
 }
